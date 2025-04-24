@@ -35,11 +35,16 @@ jobs:
         docker build -t $IMAGE_NAME .
         docker push $IMAGE_NAME
 
+    - name: Show current directory and files
+      run: |
+        pwd
+        ls -R
+
     - name: Get AKS credentials
       run: az aks get-credentials --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }}
 
     - name: Update deployment image and apply manifests
       run: |
         IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/sample-app:${{ github.sha }}
-        sed -i "s|<IMAGE_PLACEHOLDER>|$IMAGE_NAME|g" k8s/deployment.yaml
-        kubectl apply -f k8s/
+        sed -i "s|<IMAGE_PLACEHOLDER>|$IMAGE_NAME|g" ./k8s/deployment.yaml
+        kubectl apply -f ./k8s/
