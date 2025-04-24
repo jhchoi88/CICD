@@ -43,8 +43,15 @@ jobs:
     - name: Get AKS credentials
       run: az aks get-credentials --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }}
 
+    - name: Install kubelogin
+      run: |
+        curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
+        unzip kubelogin-linux-amd64.zip
+        sudo mv kubelogin /usr/local/bin
+    
     - name: Update deployment image and apply manifests
       run: |
         IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/sample-app:${{ github.sha }}
         sed -i "s|<IMAGE_PLACEHOLDER>|$IMAGE_NAME|g" K8s/deployment.yaml
         kubectl apply -f K8s/
+    
