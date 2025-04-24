@@ -1,0 +1,41 @@
+name: Build and Deploy to AKS
+
+on:
+  push:
+    branches:
+      - main   # main 브랜치에 push될 때 작동
+workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+
+    - name: Set Azure subscription
+      run: az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Build and push Docker image to ACR
+      run: |
+        IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/sample-app:${{ github.sha }}
+        az acr login --name ${{ secrets.ACR_NAME }}
+        docker build -t $IMAGE_NAME .
+        docker push $IMAGE_NAME
+
+    - name: Get AKS credentials
+      run: az aks get-credentials --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }}
+
+    - name: Update deployment image and apply manifests
+      run: |
+        IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/sample-app:${{ github.sha }}
+        sed -i "s|<IMAGE_PLACEHOLDER>|$IMAGE_NAME|g" k8s/deployment.yaml
+        kubectl apply -f k8s/
