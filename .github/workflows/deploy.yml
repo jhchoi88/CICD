@@ -47,8 +47,9 @@ jobs:
       run: |
         curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
         unzip kubelogin-linux-amd64.zip
-        sudo mv kubelogin /usr/local/bin
-    
+        sudo mv bin/linux_amd64/kubelogin /usr/local/bin/kubelogin
+        kubelogin --version
+        
     - name: Update deployment image and apply manifests
       run: |
         IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/sample-app:${{ github.sha }}
