@@ -44,9 +44,7 @@ jobs:
       run: az aks get-credentials --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }}
 
     - name: Update deployment image and apply manifests
-      working-directory: ./k8s
       run: |
         IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/sample-app:${{ github.sha }}
-        sed -i "s|<IMAGE_PLACEHOLDER>|$IMAGE_NAME|g" deployment.yaml
-        kubectl apply -f deployment.yaml
-        kubectl apply -f service.yaml
+        sed -i "s|<IMAGE_PLACEHOLDER>|$IMAGE_NAME|g" k8s/deployment.yaml
+        kubectl apply -f k8s/
